@@ -137,6 +137,7 @@ def cmyk_to_rgb(cmyk):
     rgb = 255 * (1.0 - cmyk[:,:,0:3]) * (1 - np.stack([cmyk[:,:,3],cmyk[:,:,3],cmyk[:,:,3]], axis=2))
     return np.round(rgb).astype(np.uint8)
 
+
 def rgb_to_cmyk(rgb, percent_gray):
     """
     Converts an rgb image to a cmyk representation
