@@ -39,7 +39,7 @@ def gauss_kernel(size, sigma=None, size_y=None, sigma_y=None):
     else:
         size_y = int(size_y)
     if not sigma:
-        sigma = 0.5 * size
+        sigma = 0.5 * size + .1
     if not sigma_y:
         sigma_y = sigma
     x, y = np.mgrid[-size:size+1, -size_y:size_y+1]
@@ -187,8 +187,8 @@ if __name__ == '__main__':
     # parse command line arguments
     parser = argparse.ArgumentParser(description='Generates CMYK halftone images from a color image.')
     parser.add_argument("file", type=str, help="input file name")
-    parser.add_argument("-b", "--bits", type=int, choices=[1, 2, 4, 6, 8], default=4, help="bits of color info per channel")
-    parser.add_argument("-s", "--size", type=int, default=5, help="half size of averaging region (pixels)")
+    parser.add_argument("-b", "--bits", type=int, choices=[1, 2, 4, 6, 8], default=8, help="bits of color info per channel")
+    parser.add_argument("-s", "--size", type=int, default=3, help="half size of averaging region (pixels)")
     parser.add_argument("-f", "--fill", type=float, default=0.75, help="dot fill (size) value")
     parser.add_argument("-a", "--angles", type=int, nargs="+", default = [15, 75, 0, 45], help="four angles for rotation of each channel")
     parser.add_argument("-g", "--gray", type=int, default=100, help="percent of grey component replacement (K level)")
