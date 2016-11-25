@@ -1,6 +1,6 @@
 # python-halftone
 
-A python module that uses creates CMYK images and halftone repre
+A python module that uses creates CMYK images and halftone representations
 
 Heavily adapted from [this StackOverflow answer][so] by [fraxel][fr] and [this code][gh] by [Phil Gyford][pg]
 
