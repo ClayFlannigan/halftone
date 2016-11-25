@@ -100,7 +100,7 @@ def halftone(cmyk, size, angles, fill):
         # TODO: consider using sigma to scale with magnitude
         # create a 2D gaussian kernel that will be the "dot"; normalize it to be 1.0 in the center
         kernel = gauss_kernel(size, sigma=fill*size)
-        kernel = kernel / np.max(kernel)
+        kernel /= np.max(kernel)
 
         # tile the kernel across the image
         num_kernels = np.array(rotated.shape) / s + 1
@@ -213,17 +213,17 @@ if __name__ == '__main__':
     if not args.do_not_halftone:
         halftoned = halftone(CMYK, args.size, args.angles, args.fill)
 
-        # save files
+        # save files with bit depth conversion
         f, e = os.path.splitext(args.file)
         for i in range(4):
             filename = f + args.extra_file_name + str(i) + ".TIF"
-            Image.fromarray((halftoned[:,:,i] * 2**args.bits).astype(np.uint8)).save(filename)
-        Image.fromarray((halftoned * 2**args.bits).astype(np.uint8) * (256 / 2**args.bits), mode="CMYK").save(f + "_halftone.TIF")
+            Image.fromarray((halftoned[:,:,i] * (2**args.bits-1)).astype(np.uint8)).save(filename)
+        Image.fromarray((halftoned * (2**args.bits-1)).astype(np.uint8) * (256 / 2**args.bits), mode="CMYK").save(f + "_halftone.TIF")
 
     # don't halftone; just save the CMYK
     else:
         f, e = os.path.splitext(args.file)
         for i in range(4):
             filename = f + args.extra_file_name + str(i) + ".TIF"
-            Image.fromarray((CMYK[:,:,i] * 2**args.bits).astype(np.uint8)).save(filename)
-        Image.fromarray((CMYK * 2**args.bits).astype(np.uint8) * (256 / 2**args.bits), mode="CMYK").save(f + "_CMYK.TIF")
+            Image.fromarray((CMYK[:,:,i] * (2**args.bits-1)).astype(np.uint8)).save(filename)
+        Image.fromarray((CMYK * (2**args.bits-1)).astype(np.uint8) * (256 / 2**args.bits), mode="CMYK").save(f + "_CMYK.TIF")
