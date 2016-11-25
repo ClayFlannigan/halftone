@@ -23,6 +23,7 @@ Creates four CMYK images and a combined image.  Provides options for haltoning o
 | -b {1,2,4,6,8}, --bits {1,2,4,6,8}					| bits of color info per channel |
 | -s SIZE, --size SIZE  								| half size of averaging region (pixels) |
 | -f FILL, --fill FILL  								| dot fill (size) value |
+| -p SHARPNESS, --sharpness SHARPNESS  					| level of sharpness of the dots |
 | -a ANGLES [ANGLES ...], --angles ANGLES [ANGLES ...]	| four angles for rotation of each channel |
 | -g GRAY, --gray GRAY  								| percent of grey component replacement (K level) |
 | -d, --do_not_halftone									| don't do halftoning |

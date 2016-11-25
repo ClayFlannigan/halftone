@@ -67,7 +67,7 @@ def resize(a, shape):
     return a
 
 
-def halftone(cmyk, size, angles, fill):
+def halftone(cmyk, size, angles, fill, sharpness):
     """
     Generates a halftone image from a cmyk image
         Args:
@@ -85,7 +85,7 @@ def halftone(cmyk, size, angles, fill):
         s = 2 * size + 1
 
         # rotate the image to eliminate overlap between the channels
-        rotated = rotate(channel, angle, reshape=True)
+        rotated = rotate(channel, angle, reshape=True, prefilter=False, order=1)
 
         # apply a gaussian filter to average over a the region of the kernel
         averaged = gaussian_filter(rotated, size)
@@ -100,7 +100,10 @@ def halftone(cmyk, size, angles, fill):
         # TODO: consider using sigma to scale with magnitude
         # create a 2D gaussian kernel that will be the "dot"; normalize it to be 1.0 in the center
         kernel = gauss_kernel(size, sigma=fill*size)
-        kernel /= np.max(kernel)
+
+        # Apply the sharpness multiplier and clip the kernel to 1.0
+        kernel *= sharpness / np.max(kernel)
+        kernel = np.clip(kernel, 0.0, 1.0)
 
         # tile the kernel across the image
         num_kernels = np.array(rotated.shape) / s + 1
@@ -111,7 +114,7 @@ def halftone(cmyk, size, angles, fill):
         halftone = tiled_kernel * halftone_weights
 
         # rotate the image back to zero
-        halftone = rotate(halftone, -angle)
+        halftone = rotate(halftone, -angle, prefilter=False, order=1)
 
         # crop the image to the original size
         halftone = crop_center(halftone, channel.shape)
@@ -119,9 +122,9 @@ def halftone(cmyk, size, angles, fill):
         # add this chanel to the full cmyk image
         halftone_image[:,:,i] = halftone
 
-        Image.fromarray(halftone*255).show()
+#        Image.fromarray(halftone*255).show()
 
-    Image.fromarray(cmyk_to_rgb(halftone_image)).show()
+#    Image.fromarray(cmyk_to_rgb(halftone_image)).show()
 
     return halftone_image
 
@@ -189,7 +192,8 @@ if __name__ == '__main__':
     parser.add_argument("file", type=str, help="input file name")
     parser.add_argument("-b", "--bits", type=int, choices=[1, 2, 4, 6, 8], default=8, help="bits of color info per channel")
     parser.add_argument("-s", "--size", type=int, default=3, help="half size of averaging region (pixels)")
-    parser.add_argument("-f", "--fill", type=float, default=0.75, help="dot fill (size) value")
+    parser.add_argument("-f", "--fill", type=float, default=0.5, help="dot fill (size) value")
+    parser.add_argument("-p", "--sharpness", type=float, default=1.0, help="level of sharpness of the dots")
     parser.add_argument("-a", "--angles", type=int, nargs="+", default = [15, 75, 0, 45], help="four angles for rotation of each channel")
     parser.add_argument("-g", "--gray", type=int, default=100, help="percent of grey component replacement (K level)")
     parser.add_argument("-d", "--do_not_halftone", default=False, action="store_true", help="don't do halftoning")
@@ -211,7 +215,7 @@ if __name__ == '__main__':
 
     # halftone cmyk image and save
     if not args.do_not_halftone:
-        halftoned = halftone(CMYK, args.size, args.angles, args.fill)
+        halftoned = halftone(CMYK, args.size, args.angles, args.fill, args.sharpness)
 
         # save files with bit depth conversion
         f, e = os.path.splitext(args.file)
