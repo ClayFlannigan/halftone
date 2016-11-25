@@ -179,7 +179,6 @@ def test():
         assert(np.allclose(cmyk_to_rgb(rgb_to_cmyk(rgb, gray)) - rgb, 0.0))
 
 
-
 if __name__ == '__main__':
 
     # test()
