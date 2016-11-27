@@ -33,9 +33,9 @@ Creates four CMYK images and a combined image.  Provides options for haltoning o
 | Haltoned                           | CMYK Only                            | 
 | :--------------------------------: | :----------------------------------: | 
 | ![Original Image](./pics/RGB.png)  | ![Original Image](./pics/Banff.jpg)  | 
-| ![C Image](./pics/RGB_Clr0.png)    | ![C Image](./pics/Banff_Clr0.png)    |
-| ![M Image](./pics/RGB_Clr1.png)    | ![M Image](./pics/Banff_Clr1.png)    |
-| ![Y Image](./pics/RGB_Clr2.png)    | ![Y Image](./pics/Banff_Clr2.png)    |
-| ![K Image](./pics/RGB_Clr3.png)    | ![K Image](./pics/Banff_Clr3.png)    |
-| ![CMYK Image](./pics/RGB_CMYK.png) | ![CMYK Image](./pics/Banff_CMYK.png) |
+| ![C Image](./pics/RGB_Clr0.png)    | ![C Image](./pics/banff_Clr0.png)    |
+| ![M Image](./pics/RGB_Clr1.png)    | ![M Image](./pics/banff_Clr1.png)    |
+| ![Y Image](./pics/RGB_Clr2.png)    | ![Y Image](./pics/banff_Clr2.png)    |
+| ![K Image](./pics/RGB_Clr3.png)    | ![K Image](./pics/banff_Clr3.png)    |
+| ![CMYK Image](./pics/RGB_CMYK.png) | ![CMYK Image](./pics/banff_CMYK.png) |
 
