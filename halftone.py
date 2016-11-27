@@ -190,14 +190,15 @@ if __name__ == '__main__':
     # parse command line arguments
     parser = argparse.ArgumentParser(description='Generates CMYK halftone images from a color image.')
     parser.add_argument("file", type=str, help="input file name")
-    parser.add_argument("-b", "--bits", type=int, choices=[1, 2, 4, 6, 8], default=8, help="bits of color info per channel")
-    parser.add_argument("-s", "--size", type=int, default=3, help="half size of averaging region (pixels)")
-    parser.add_argument("-f", "--fill", type=float, default=0.5, help="dot fill (size) value")
-    parser.add_argument("-p", "--sharpness", type=float, default=1.0, help="level of sharpness of the dots")
     parser.add_argument("-a", "--angles", type=int, nargs="+", default = [15, 75, 0, 45], help="four angles for rotation of each channel")
-    parser.add_argument("-g", "--gray", type=int, default=100, help="percent of grey component replacement (K level)")
+    parser.add_argument("-b", "--bits", type=int, choices=[1, 2, 4, 6, 8], default=8, help="bits of color info per channel")
+    parser.add_argument("-c", "--colorize_CMYK", default=False, action="store_true", help="save CMYK files as RGB color images")
     parser.add_argument("-d", "--do_not_halftone", default=False, action="store_true", help="don't do halftoning")
     parser.add_argument("-e", "--extra_file_name", type=str, default="_Clr", help="final name addition for each channel")
+    parser.add_argument("-f", "--fill", type=float, default=0.5, help="dot fill (size) value")
+    parser.add_argument("-g", "--gray", type=int, default=100, help="percent of grey component replacement (K level)")
+    parser.add_argument("-p", "--sharpness", type=float, default=1.0, help="level of sharpness of the dots")
+    parser.add_argument("-s", "--size", type=int, default=3, help="half size of averaging region (pixels)")
     args = parser.parse_args()
 
     # open file
@@ -213,21 +214,21 @@ if __name__ == '__main__':
     # separate into CMYK channels; might be better to use pyCMS and an ICC color profile
     CMYK = rgb_to_cmyk(img, args.gray)
 
-    # halftone cmyk image and save
+    # halftone cmyk images
     if not args.do_not_halftone:
-        halftoned = halftone(CMYK, args.size, args.angles, args.fill, args.sharpness)
+        CMYK = halftone(CMYK, args.size, args.angles, args.fill, args.sharpness)
 
-        # save files with bit depth conversion
-        f, e = os.path.splitext(args.file)
-        for i in range(4):
-            filename = f + args.extra_file_name + str(i) + ".TIF"
-            Image.fromarray((halftoned[:,:,i] * (2**args.bits-1)).astype(np.uint8)).save(filename)
-        Image.fromarray((halftoned * (2**args.bits-1)).astype(np.uint8) * (256 / 2**args.bits), mode="CMYK").save(f + "_halftone.TIF")
+    # save files with bit depth conversion
+    f, e = os.path.splitext(args.file)
+    for i in range(4):
+        filename = f + args.extra_file_name + str(i) + ".TIF"
+        if args.colorize_CMYK:
+            channel = np.zeros(CMYK.shape)
+            channel[:,:,i] = CMYK[:,:,i]
+            out = cmyk_to_rgb(channel)
+        else:
+            out = (CMYK[:,:,i] * (2**args.bits-1)).astype(np.uint8)
+        Image.fromarray(out).save(filename)
+    Image.fromarray((CMYK * (2**args.bits-1)).astype(np.uint8) * (256 / 2**args.bits), mode="CMYK").save(f + "_CMYK.TIF")
 
-    # don't halftone; just save the CMYK
-    else:
-        f, e = os.path.splitext(args.file)
-        for i in range(4):
-            filename = f + args.extra_file_name + str(i) + ".TIF"
-            Image.fromarray((CMYK[:,:,i] * (2**args.bits-1)).astype(np.uint8)).save(filename)
-        Image.fromarray((CMYK * (2**args.bits-1)).astype(np.uint8) * (256 / 2**args.bits), mode="CMYK").save(f + "_CMYK.TIF")
+
