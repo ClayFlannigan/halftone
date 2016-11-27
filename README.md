@@ -30,12 +30,12 @@ Creates four CMYK images and a combined image.  Provides options for haltoning o
 
 ## Examples
 
-| Haltoned                           | CMYK Only                            | 
-| :--------------------------------: | :----------------------------------: | 
-| ![Original Image](./pics/RGB.png)  | ![Original Image](./pics/Banff.jpg)  | 
-| ![C Image](./pics/RGB_Clr0.png)    | ![C Image](./pics/banff_Clr0.png)    |
-| ![M Image](./pics/RGB_Clr1.png)    | ![M Image](./pics/banff_Clr1.png)    |
-| ![Y Image](./pics/RGB_Clr2.png)    | ![Y Image](./pics/banff_Clr2.png)    |
-| ![K Image](./pics/RGB_Clr3.png)    | ![K Image](./pics/banff_Clr3.png)    |
-| ![CMYK Image](./pics/RGB_CMYK.png) | ![CMYK Image](./pics/banff_CMYK.png) |
+|               | Haltoned                           | CMYK Only                            | 
+| ------------- | :--------------------------------: | :----------------------------------: | 
+| Original      | ![Original Image](./pics/RGB.png)  | ![Original Image](./pics/Banff.jpg)  | 
+| C-Channel     | ![C Image](./pics/RGB_Clr0.png)    | ![C Image](./pics/banff_Clr0.png)    |
+| M-Channel     | ![M Image](./pics/RGB_Clr1.png)    | ![M Image](./pics/banff_Clr1.png)    |
+| Y-Channel     | ![Y Image](./pics/RGB_Clr2.png)    | ![Y Image](./pics/banff_Clr2.png)    |
+| K-Channel     | ![K Image](./pics/RGB_Clr3.png)    | ![K Image](./pics/banff_Clr3.png)    |
+| Combined CMYK | ![CMYK Image](./pics/RGB_CMYK.png) | ![CMYK Image](./pics/banff_CMYK.png) |
 
