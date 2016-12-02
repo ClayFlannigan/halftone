@@ -1,4 +1,4 @@
-# python-halftone
+# halftone
 
 A python module that uses creates CMYK images and halftone representations
 
@@ -12,7 +12,10 @@ Heavily adapted from [this StackOverflow answer][so] by [fraxel][fr] and [this c
 
 ## Usage
 
-    ./haltone.py "filename"
+    halftone.py [-h] [-a ANGLES [ANGLES ...]] [-b {1,2,4,6,8}] [-c] [-d]
+                   [-e EXTRA_FILE_NAME] [-f FILL] [-g GRAY] [-p SHARPNESS]
+                   [-s SIZE]
+                   file
 
 Creates four CMYK images and a combined image.  Provides options for haltoning or not (-d)
 
@@ -24,7 +27,7 @@ Creates four CMYK images and a combined image.  Provides options for haltoning o
 | -d, --do_not_halftone	 | don't do halftoning                             | False   | 
 | -e, --extra_file_name  | final name addition for each channel            | "_Clr"  | 
 | -f, --fill  			 | dot fill (size) value                           | 0.5     | 
-| -g, --gray  			 | percent of grey component replacement (K level) | 100     | 
+| -g, --gray  			 | percent of gray component replacement (K level) | 100     | 
 | -p, --sharpness  		 | level of sharpness of the dots                  | 1.0     | 
 | -s, --size  			 | half size of averaging region (pixels)          | 3       | 
 
