@@ -5,27 +5,26 @@
 #reference: https://tools.ietf.org/html/rfc2306
 
 import numpy as np
+from math import ceil
 
-# see TIFF tags: http://www.awaresystems.be/imaging/tiff/tifftags/baseline.html
-TAGS = {'image_width': '0100',          # short
-        'image_length': '0101',         # short
-        'bits_per_sample': '0102',      # short array
-        'compression': '0103',          # short
-        'photometric': '0106',          # short
-        'strip_offsets': '0111',        # long
-        'orientation': '0112',          # short
-        'samples_per_pixel': '0115',    # short
-        'rows_per_strip': '0116',       # short
-        'strip_byte_count': '0117',     # long
-        'minimum_sample_value': '0118', # short array
-        'maximum_sample_value': '0119', # short array
-        'x_resolution': '011a',         # rational
-        'y_resolution': '011b',         # rational
-        'planar_configuration': '011c', # short
-        'resolution_unit': '0128',      # short
-        'sample_format': '0153'}        # short array
+TAGS = {'image_width':          '0100',     # short
+        'image_length':         '0101',     # short
+        'bits_per_sample':      '0102',     # short array
+        'compression':          '0103',     # short
+        'photometric':          '0106',     # short
+        'strip_offsets':        '0111',     # long
+        'orientation':          '0112',     # short
+        'samples_per_pixel':    '0115',     # short
+        'rows_per_strip':       '0116',     # short
+        'strip_byte_count':     '0117',     # long
+        'minimum_sample_value': '0118',     # short array
+        'maximum_sample_value': '0119',     # short array
+        'x_resolution':         '011a',     # rational
+        'y_resolution':         '011b',     # rational
+        'planar_configuration': '011c',     # short
+        'resolution_unit':      '0128',     # short
+        'sample_format':        '0153'}     # short array
 
-# see Python format characters: https://docs.python.org/2/library/struct.html#format-characters
 TAGTYPES = {'B': '0001',    # byte
             's': '0002',    # ASCII string including c-style null terminating character
             'H': '0003',    # unsigned short (word, 2 bytes)
@@ -49,7 +48,7 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
     """
 
     pixels_per_byte = 8 // bit_depth
-    data_bytes = img.size / pixels_per_byte
+    data_bytes = int(ceil(float(img.size) / pixels_per_byte))
     header_bytes = 8
     footer_bytes = 4
     IFD_count_bytes = 2
@@ -73,14 +72,14 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
         if channels == 3:
             photometric = 2 # RGB
         else:
-            photometric = 0 # black_is_zero
+            photometric = 1 # black_is_zero
 
     with open(file_name, mode="wb") as f:
 
         # write header
         f.write(bytearray.fromhex("4d4d"))                                              # big endian
         f.write(bytearray.fromhex("002a"))                                              # TIFF file identifier
-        f.write(bytearray.fromhex(int_to_hexstring(data_bytes+header_bytes, 'I', 8)))   # offset to first IFD
+        f.write(bytearray.fromhex(int_to_hexstring(header_bytes + data_bytes, 'I', 8)))   # offset to first IFD
 
         # write the image data
         img = flatten_and_pack(img, bit_depth)
@@ -90,12 +89,15 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
         f.write(bytearray.fromhex(int_to_hexstring(num_tags, 'H', 4)))                  # number of tags in IFD
         f.write(create_tag_byte_array('image_width', 'H', 1, width))
         f.write(create_tag_byte_array('image_length', 'H', 1, height))
-        offset = header_bytes + data_bytes + footer_bytes + IFD_count_bytes + tag_bytes * num_tags
+
+        offset = header_bytes + data_bytes + IFD_count_bytes + tag_bytes * num_tags + footer_bytes
+
         if channels == 1:
             f.write(create_tag_byte_array('bits_per_sample', 'H', 1, bit_depth))
         else:
             f.write(create_tag_byte_array('bits_per_sample', 'H', channels, offset, offset=True))
             offset += channels * 2
+
         f.write(create_tag_byte_array('compression', 'H', 1, 1))
         f.write(create_tag_byte_array('photometric', 'H', 1, photometric))
         f.write(create_tag_byte_array('strip_offsets', 'I', 1, header_bytes))
@@ -103,27 +105,34 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
         f.write(create_tag_byte_array('samples_per_pixel', 'H', 1, channels))
         f.write(create_tag_byte_array('rows_per_strip', 'H', 1, height))
         f.write(create_tag_byte_array('strip_byte_count', 'I', 1, data_bytes))
+
         if channels == 1:
             f.write(create_tag_byte_array('minimum_sample_value', 'H', 1, 0))
         else:
             f.write(create_tag_byte_array('minimum_sample_value', 'H', channels, offset, offset=True))
             offset += channels * 2
+
         if channels == 1:
             f.write(create_tag_byte_array('maximum_sample_value', 'H', 1, 255))
         else:
             f.write(create_tag_byte_array('maximum_sample_value', 'H', channels, offset, offset=True))
             offset += channels * 2
+
         f.write(create_tag_byte_array('x_resolution', 'R', 1, offset, offset=True))
         offset += 8 # for rational type
+
         f.write(create_tag_byte_array('y_resolution', 'R', 1, offset, offset=True))
         offset += 8  # for rational type
+
         f.write(create_tag_byte_array('planar_configuration', 'H', 1, 1))
         f.write(create_tag_byte_array('resolution_unit', 'H', 1, 2))
+
         if channels == 1:
             f.write(create_tag_byte_array('sample_format', 'H', 1, 1))
         else:
             f.write(create_tag_byte_array('sample_format', 'H', channels, offset, offset=True))
             offset += channels * 2
+
         f.write(bytearray.fromhex("00000000"))  # ending 4 bytes (or offset to next IFD)
 
         # write IFD array data
@@ -134,12 +143,15 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
                 f.write(bytearray.fromhex(int_to_hexstring(0, 'H', 4)))                 # minimum value
             for i in range(channels):
                 f.write(bytearray.fromhex(int_to_hexstring(255, 'H', 4)))               # maximum value
+
         x_res_numerator = int_to_hexstring(DPI, 'I', 8)
         x_res_denominator = int_to_hexstring(1, 'I', 8)
-        f.write(bytearray.fromhex(x_res_numerator+x_res_denominator))                   # x resolution
+        f.write(bytearray.fromhex(x_res_numerator + x_res_denominator))                 # x resolution
+
         y_res_numerator = int_to_hexstring(DPI, 'I', 8)
         y_res_denominator = int_to_hexstring(1, 'I', 8)
-        f.write(bytearray.fromhex(y_res_numerator+y_res_denominator))                   # y resolution
+        f.write(bytearray.fromhex(y_res_numerator + y_res_denominator))                 # y resolution
+
         if channels > 1:
             for i in range(channels):
                 f.write(bytearray.fromhex(int_to_hexstring(1, 'H', 4)))                 # sample format
@@ -155,9 +167,10 @@ def flatten_and_pack(img, bits):
     """
 
     pixels_per_byte = 8 // bits
+    data_bytes = int(ceil(float(img.size) / pixels_per_byte))
     a = np.right_shift(img, 8-bits)                                                     # reduce bit depth
     b = a.flatten()                                                                     # flatten
-    c = np.zeros(int(np.ceil(float(b.size) / pixels_per_byte)), dtype=np.uint8)         # place holder for shifted pixels
+    c = np.zeros(data_bytes, dtype=np.uint8)         # place holder for shifted pixels
     for i in range(0, pixels_per_byte):
         d = np.left_shift(b[i::pixels_per_byte], (pixels_per_byte-1-i)*bits)            # shift pixels
         c[0:d.size] += d                                                                # add to result
@@ -218,17 +231,31 @@ def int_to_hexstring(data, data_type='H', str_len=8):
 
 if __name__ == "__main__":
 
-    y, x = np.mgrid[0:256, 0:256]
-    z = np.ones((256,256)) * 128
-    img = np.dstack((x, y, z)).astype(np.uint8)
-    img1 = y.astype(np.uint8)
-    img2 = np.arange(256, dtype=np.uint8)
-
     import PIL.Image
-    img3 = PIL.Image.open("pics/RGB.png")
-    img3 = np.array(img3)[:,:,0:3]
-    img4 = PIL.Image.open("pics/banff.jpg")
-    img4 = np.array(img4)[:,:,0:3]
 
-    write_tiff("/Users/wflannigan/Desktop/Test.TIF", img, bit_depth=2)
+    # y, x = np.mgrid[0:256, 0:256]
+    # z = np.ones((256,256)) * 128
+    # img0 = np.dstack((x, y, z)).astype(np.uint8)
+    # img1 = y.astype(np.uint8)
+    # img2 = np.arange(256, dtype=np.uint8)
+    # img3 = PIL.Image.open("pics/RGB.png")
+    # img3 = np.array(img3)[:,:,0:3]
+    # img4 = PIL.Image.open("pics/banff.jpg")
+    # img4 = np.array(img4)[:,:,0:3]
+    # img5, _ = (np.mgrid[0:1242, 0:1276] / 1242. * 255.).astype(np.uint8)
+    # img6, _ = (np.mgrid[0:1007, 0:12] / 1007. * 255.).astype(np.uint8)
+    #
+    # for i in (1, 2, 4, 8):
+    #
+    #     write_tiff("Test0_" + str(i) + ".TIF", img0, bit_depth=i)
+    #     write_tiff("Test1_" + str(i) + ".TIF", img1, bit_depth=i)
+    #     write_tiff("Test2_" + str(i) + ".TIF", img2, bit_depth=i)
+    #     write_tiff("Test3_" + str(i) + ".TIF", img3, bit_depth=i)
+    #     write_tiff("Test4_" + str(i) + ".TIF", img4, bit_depth=i)
+    #     write_tiff("Test5_" + str(i) + ".TIF", img5, bit_depth=i)
+    #     write_tiff("Test6_" + str(i) + ".TIF", img6, bit_depth=i)
 
+    for i in range(2242, 2260, 1):
+
+        img, _ = (np.mgrid[0:i, 0:i] / float(i) * 255.).astype(np.uint8)
+        write_tiff("Test" + str(i) + ".TIF", img, bit_depth=1)
