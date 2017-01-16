@@ -205,7 +205,7 @@ if __name__ == '__main__':
     try:
         im = Image.open(args.file)
     except IOError:
-        print "Cannot open ", args.file
+        print("Cannot open ", args.file)
         exit(1)
 
     # convert to numpy array
