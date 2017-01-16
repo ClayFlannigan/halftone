@@ -215,7 +215,7 @@ if __name__ == '__main__':
     CMYK = rgb_to_cmyk(img, args.gray)
 
     # halftone cmyk images
-    if  args.halftone:
+    if args.halftone:
         CMYK = halftone(CMYK, args.size, args.angles, args.fill, args.sharpness)
 
     # save files
@@ -226,7 +226,9 @@ if __name__ == '__main__':
 
         # save the RGB color version of the individual CMYK images
         if args.colorize_CMYK:
-            out = cmyk_to_rgb(CMYK[:,:,i].copy())
+            channel = np.zeros(CMYK.shape)
+            channel[:,:,i] = CMYK[:,:,i]
+            out = cmyk_to_rgb(channel)
             write_tiff(filename, out)
 
         # save the individual CMYK files
