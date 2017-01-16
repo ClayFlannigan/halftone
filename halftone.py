@@ -222,10 +222,9 @@ if __name__ == '__main__':
     f, e = os.path.splitext(args.file)
     for i in range(4):
 
-        filename = f + args.extra_file_name + str(i+1) + ".TIF"
-
         # save the RGB color version of the individual CMYK images
         if args.colorize_CMYK:
+            filename = f + ['_C', '_M', '_Y', '_K'][i] + ".TIF"
             channel = np.zeros(CMYK.shape)
             channel[:,:,i] = CMYK[:,:,i]
             out = cmyk_to_rgb(channel)
@@ -233,6 +232,7 @@ if __name__ == '__main__':
 
         # save the individual CMYK files
         else:
+            filename = f + args.extra_file_name + str(i + 1) + ".TIF"
             img = (255 * CMYK[:,:,i]).astype(np.uint8)
             write_tiff(filename, img, bit_depth=args.bits, photometric=0)
 
