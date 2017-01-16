@@ -232,9 +232,7 @@ if __name__ == '__main__':
         # save the individual CMYK files
         else:
             img = (255 * CMYK[:,:,i]).astype(np.uint8)
-            # write_tiff(filename, img, bit_depth=args.bits, photometric=0)
-            # TODO: this seems to be broken at bit depth 2 and 1
-            write_tiff(filename, img, bit_depth=2, photometric=0)
+            write_tiff(filename, img, bit_depth=args.bits, photometric=0)
 
     # save CMYK full image
     Image.fromarray(cmyk_to_rgb(CMYK)).save(f + ".BMP")

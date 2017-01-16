@@ -47,17 +47,11 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
         Affects: Writes over existing files without warning
     """
 
-    pixels_per_byte = 8 // bit_depth
-    data_bytes = int(ceil(float(img.size) / pixels_per_byte))
-    header_bytes = 8
-    footer_bytes = 4
-    IFD_count_bytes = 2
-    tag_bytes = 12
-    num_tags = 17
+    print file_name
 
     if len(img.shape) == 1:
-        height = img.shape[0]
-        width = 1
+        height = 1
+        width = img.shape[0]
         channels = 1
     elif len(img.shape) == 2:
         height = img.shape[0]
@@ -70,9 +64,18 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
 
     if photometric is None:
         if channels == 3:
-            photometric = 2 # RGB
+            photometric = 2  # RGB
         else:
-            photometric = 1 # black_is_zero
+            photometric = 1  # black_is_zero
+
+    pixels_per_byte = 8 // bit_depth
+    bytes_per_row = int(ceil(float(width) / pixels_per_byte)) * channels
+    data_bytes = bytes_per_row * height
+    header_bytes = 8
+    footer_bytes = 4
+    IFD_count_bytes = 2
+    tag_bytes = 12
+    num_tags = 17
 
     with open(file_name, mode="wb") as f:
 
@@ -113,7 +116,7 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
             offset += channels * 2
 
         if channels == 1:
-            f.write(create_tag_byte_array('maximum_sample_value', 'H', 1, 255))
+            f.write(create_tag_byte_array('maximum_sample_value', 'H', 1, 2**bit_depth-1))
         else:
             f.write(create_tag_byte_array('maximum_sample_value', 'H', channels, offset, offset=True))
             offset += channels * 2
@@ -142,7 +145,7 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
             for i in range(channels):
                 f.write(bytearray.fromhex(int_to_hexstring(0, 'H', 4)))                 # minimum value
             for i in range(channels):
-                f.write(bytearray.fromhex(int_to_hexstring(255, 'H', 4)))               # maximum value
+                f.write(bytearray.fromhex(int_to_hexstring(2**bit_depth-1, 'H', 4)))    # maximum value
 
         x_res_numerator = int_to_hexstring(DPI, 'I', 8)
         x_res_denominator = int_to_hexstring(1, 'I', 8)
@@ -161,19 +164,22 @@ def flatten_and_pack(img, bits):
     Packs reduced bit depth images into bytes and returns a flattened array
         Args:
             img (uint8 numpy array): grayscale or multi-channel image
-            bits_depth (int): 1, 2, 4, or 8 bits per channel
+            bits (int): 1, 2, 4, or 8 bits per channel
         Returns:
             uint8 numpy array: flattened and packed array
     """
 
+    # pad the image at the end of the rows, so that each row ends on a byte boundary
     pixels_per_byte = 8 // bits
-    data_bytes = int(ceil(float(img.size) / pixels_per_byte))
-    a = np.right_shift(img, 8-bits)                                                     # reduce bit depth
-    b = a.flatten()                                                                     # flatten
-    c = np.zeros(data_bytes, dtype=np.uint8)         # place holder for shifted pixels
+    if len(img.shape) > 1:
+        if img.shape[1] % pixels_per_byte != 0:
+            img = np.hstack((img, np.zeros((img.shape[0], pixels_per_byte - img.shape[1] % pixels_per_byte), dtype=np.uint8)))
+
+    a = np.right_shift(img, 8-bits)                                             # reduce bit depth
+    b = a.flatten()                                                             # flatten
+    c = np.zeros(b.size // pixels_per_byte, dtype=np.uint8)
     for i in range(0, pixels_per_byte):
-        d = np.left_shift(b[i::pixels_per_byte], (pixels_per_byte-1-i)*bits)            # shift pixels
-        c[0:d.size] += d                                                                # add to result
+        c += np.left_shift(b[i::pixels_per_byte], (pixels_per_byte-1-i)*bits)   # pack pixels and add to result
 
     return c
 
@@ -228,34 +234,32 @@ def int_to_hexstring(data, data_type='H', str_len=8):
 
     return hexstring
 
-
-if __name__ == "__main__":
+def test():
 
     import PIL.Image
 
-    # y, x = np.mgrid[0:256, 0:256]
-    # z = np.ones((256,256)) * 128
-    # img0 = np.dstack((x, y, z)).astype(np.uint8)
-    # img1 = y.astype(np.uint8)
-    # img2 = np.arange(256, dtype=np.uint8)
-    # img3 = PIL.Image.open("pics/RGB.png")
-    # img3 = np.array(img3)[:,:,0:3]
-    # img4 = PIL.Image.open("pics/banff.jpg")
-    # img4 = np.array(img4)[:,:,0:3]
-    # img5, _ = (np.mgrid[0:1242, 0:1276] / 1242. * 255.).astype(np.uint8)
-    # img6, _ = (np.mgrid[0:1007, 0:12] / 1007. * 255.).astype(np.uint8)
-    #
-    # for i in (1, 2, 4, 8):
-    #
-    #     write_tiff("Test0_" + str(i) + ".TIF", img0, bit_depth=i)
-    #     write_tiff("Test1_" + str(i) + ".TIF", img1, bit_depth=i)
-    #     write_tiff("Test2_" + str(i) + ".TIF", img2, bit_depth=i)
-    #     write_tiff("Test3_" + str(i) + ".TIF", img3, bit_depth=i)
-    #     write_tiff("Test4_" + str(i) + ".TIF", img4, bit_depth=i)
-    #     write_tiff("Test5_" + str(i) + ".TIF", img5, bit_depth=i)
-    #     write_tiff("Test6_" + str(i) + ".TIF", img6, bit_depth=i)
+    y, x = np.mgrid[0:256, 0:256]
+    z = np.ones((256,256)) * 128
+    img0 = np.dstack((x, y, z)).astype(np.uint8)
+    img1 = y.astype(np.uint8)
+    img2 = np.arange(256, dtype=np.uint8)
+    img3 = PIL.Image.open("pics/RGB.png")
+    img3 = np.array(img3)[:,:,0:3]
+    img4 = PIL.Image.open("pics/banff.jpg")
+    img4 = np.array(img4)[:,:,0:3]
+    img5, _ = (np.mgrid[0:1242, 0:1276] / 1242. * 255.).astype(np.uint8)
+    img6, _ = (np.mgrid[0:1007, 0:12] / 1007. * 255.).astype(np.uint8)
 
-    for i in range(2242, 2260, 1):
+    for i in (1, 2, 4, 8):
 
-        img, _ = (np.mgrid[0:i, 0:i] / float(i) * 255.).astype(np.uint8)
-        write_tiff("Test" + str(i) + ".TIF", img, bit_depth=1)
+        write_tiff("Test0_" + str(i) + ".TIF", img0, bit_depth=i)
+        write_tiff("Test1_" + str(i) + ".TIF", img1, bit_depth=i)
+        write_tiff("Test2_" + str(i) + ".TIF", img2, bit_depth=i)
+        write_tiff("Test3_" + str(i) + ".TIF", img3, bit_depth=i)
+        write_tiff("Test4_" + str(i) + ".TIF", img4, bit_depth=i)
+        write_tiff("Test5_" + str(i) + ".TIF", img5, bit_depth=i)
+        write_tiff("Test6_" + str(i) + ".TIF", img6, bit_depth=i)
+
+if __name__ == "__main__":
+
+    test()
