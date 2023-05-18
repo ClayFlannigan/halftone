@@ -22,6 +22,7 @@ Creates four CMYK images and a combined image.  Provides options for haltoning o
 | OPTION 				 | DESCRIPTION                                     | Default | 
 | ---------------------- | ----------------------------------------------- | ------- | 
 | -h, --help             | show this help message and exit                 | n/a     | 
+| -l, --halftone         | halftone the image                              | False   | 
 | -b, --bits {1,2,4,6,8} | bits of color info per channel                  | 8       | 
 | -c, --colorize_CMYK    | save CMYK files as RGB color images             | False   | 
 | -d, --do_not_halftone	 | don't do halftoning                             | False   | 

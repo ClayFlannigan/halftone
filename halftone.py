@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from PIL import Image
 import numpy as np
 from scipy.ndimage.interpolation import rotate
@@ -20,7 +18,8 @@ def crop_center(img, new_shape):
     """
     ul = ((img.shape[0]-new_shape[0])/2, (img.shape[1]-new_shape[1])/2)
     br = (ul[0]+new_shape[0], ul[1]+new_shape[1])
-    return img[ul[0]:br[0], ul[1]:br[1]]
+    #print(f"ul[0]= {ul[0]} : br[0]= {br[0]}, ul[1]= {ul[1]}: br[1]= {br[1]}")
+    return img[int(ul[0]):int(br[0]), int(ul[1]):int(br[1])]
 
 
 def gauss_kernel(size, sigma=None, size_y=None, sigma_y=None):
@@ -108,7 +107,10 @@ def halftone(cmyk, size, angles, fill, sharpness):
 
         # tile the kernel across the image
         num_kernels = np.array(rotated.shape) / s + 1
-        tiled_kernel = np.tile(kernel, num_kernels)
+        # print(f"kernel: {kernel} - num_kernels: {num_kernels}")
+        # print(f"kernel: {type(kernel)} - num_kernels: {type(num_kernels)}")
+        # print(num_kernels[1])
+        tiled_kernel = np.tile(kernel, (int(num_kernels[0]), int(num_kernels[1])))
         tiled_kernel = resize(tiled_kernel, rotated.shape)
 
         # multiply the kernel image with the weights to generate the halftone image
@@ -118,6 +120,7 @@ def halftone(cmyk, size, angles, fill, sharpness):
         halftone = rotate(halftone, -angle, prefilter=False, order=1)
 
         # crop the image to the original size
+        #print(f"channel.shape: {channel.shape}")
         halftone = crop_center(halftone, channel.shape)
 
         # add this chanel to the full cmyk image
@@ -205,7 +208,7 @@ if __name__ == '__main__':
     try:
         im = Image.open(args.file)
     except IOError:
-        print "Cannot open ", args.file
+        print("Cannot open ", args.file)
         exit(1)
 
     # convert to numpy array
