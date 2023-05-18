@@ -14,7 +14,7 @@ Heavily adapted from [this StackOverflow answer][so] by [fraxel][fr] and [this c
 
     halftone.py [-h] [-a ANGLES [ANGLES ...]] [-b {1,2,4,6,8}] [-c] [-d]
                    [-e EXTRA_FILE_NAME] [-f FILL] [-g GRAY] [-p SHARPNESS]
-                   [-s SIZE]
+                   [-s SIZE] [-l]
                    file
 
 Creates four CMYK images and a combined image.  Provides options for haltoning or not (-d)
