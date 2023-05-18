@@ -14,7 +14,7 @@ Heavily adapted from [this StackOverflow answer][so] by [fraxel][fr] and [this c
 
     halftone.py [-h] [-a ANGLES [ANGLES ...]] [-b {1,2,4,6,8}] [-c] [-d]
                    [-e EXTRA_FILE_NAME] [-f FILL] [-g GRAY] [-p SHARPNESS]
-                   [-s SIZE]
+                   [-s SIZE] [-l]
                    file
 
 Creates four CMYK images and a combined image.  Provides options for haltoning or not (-d)
@@ -22,6 +22,7 @@ Creates four CMYK images and a combined image.  Provides options for haltoning o
 | OPTION 				 | DESCRIPTION                                     | Default | 
 | ---------------------- | ----------------------------------------------- | ------- | 
 | -h, --help             | show this help message and exit                 | n/a     | 
+| -l, --halftone         | halftone the image                              | False   | 
 | -b, --bits {1,2,4,6,8} | bits of color info per channel                  | 8       | 
 | -c, --colorize_CMYK    | save CMYK files as RGB color images             | False   | 
 | -d, --do_not_halftone	 | don't do halftoning                             | False   | 

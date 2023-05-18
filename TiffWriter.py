@@ -47,7 +47,7 @@ def write_tiff(file_name, img, bit_depth=8, photometric=None, DPI=200):
         Affects: Writes over existing files without warning
     """
 
-    print file_name
+    print(file_name)
 
     if len(img.shape) == 1:
         height = 1
